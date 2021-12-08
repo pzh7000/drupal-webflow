@@ -3,7 +3,7 @@
   "description": "Provides a mechanism to integrate Webflow sites with Drupal.",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
-  "homepage": "https://www.drupal.org/project/pathauto",
+  "homepage": "https://github.com/pzh7000/drupal-webflow",
   "support": {
     "issues": "",
     "documentation": "",
