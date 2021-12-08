@@ -4,6 +4,8 @@ namespace Drupal\webflow;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\ClientException;
 
 /**
  * WebflowApi service.
@@ -58,8 +60,25 @@ class WebflowApi {
       'headers' => $this->buildHeaders(),
     ];
 
-    $response = $this->httpClient->request('GET', 'https://api.webflow.com/sites', $options);
+    try {
+      $response = $this->httpClient->request('GET', 'https://api.webflow.com/sites', $options);
+    } catch (ClientException $e) {
+//      $request_error_msg = Psr7\Message::toString($e->getRequest());
+//      $response_error_msg = Psr7\Message::toString($e->getResponse());
+      throw $e;
+    }
+
     return json_decode($response->getBody());
+
+  }
+
+  private function handle_client_response() {
+    try {
+      $client->request('GET', 'https://api.webflow.com/sites');
+    } catch (ClientException $e) {
+      echo Psr7\Message::toString($e->getRequest());
+      echo Psr7\Message::toString($e->getResponse());
+    }
   }
 
 }

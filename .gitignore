@@ -1,0 +1,7 @@
+# IDE files
+.buildpath
+.project
+.settings
+.idea
+.vscode
+*.code-workspace

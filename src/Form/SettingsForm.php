@@ -5,6 +5,7 @@ namespace Drupal\webflow\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\webflow\WebflowApi;
+use GuzzleHttp\Exception\ClientException;
 
 /**
  * Configure webflow settings for this site.
@@ -38,13 +39,19 @@ class SettingsForm extends ConfigFormBase {
     if (!is_null($this->config('webflow.settings')->get('api-key'))) {
       /** @var WebflowApi $webflow */
       $webflow = \Drupal::service('webflow.webflow_api');
-      $response = $webflow->getSites();
-      dump('wuddup');
+      try {
+        $response = $webflow->getSites();
+      } catch (ClientException $e) {
+        \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
+//        \Drupal::messenger()->addError($e->getMessage());
+      }
 
-      $preview_url = $response[0]->previewUrl;
-      $form['preview'] = [
-        '#markup' => '<img src="' . $preview_url . '"/>'
-      ];
+      if (is_array($response)) {
+        $preview_url = $response[0]->previewUrl;
+        $form['preview'] = [
+          '#markup' => '<img src="' . $preview_url . '"/>'
+        ];
+      }
     }
     return parent::buildForm($form, $form_state);
   }
