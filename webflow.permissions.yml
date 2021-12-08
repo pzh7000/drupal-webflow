@@ -1,0 +1,4 @@
+administer webflow configuration:
+  title: 'Administer webflow configuration'
+  description: 'Optional description.'
+  restrict access: true

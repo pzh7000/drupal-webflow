@@ -1,0 +1,4 @@
+services:
+  webflow.webflow_api:
+    class: Drupal\webflow\WebflowApi
+    arguments: ['@http_client', '@config.factory']

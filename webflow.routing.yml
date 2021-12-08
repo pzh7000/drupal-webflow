@@ -1,0 +1,15 @@
+webflow.example:
+  path: '/webflow/example'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\webflow\Controller\WebflowController::build'
+  requirements:
+    _permission: 'access content'
+
+webflow.settings_form:
+  path: '/admin/config/system/webflow'
+  defaults:
+    _title: 'Webflow Settings'
+    _form: 'Drupal\webflow\Form\SettingsForm'
+  requirements:
+    _permission: 'administer webflow configuration'
