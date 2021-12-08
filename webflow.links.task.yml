@@ -1,0 +1,14 @@
+webflow.admin:
+  route_name: webflow.admin
+  title: 'Webflow'
+  base_route: webflow.admin
+
+webflow.pages:
+  route_name: webflow.pages_form
+  title: 'Pages'
+  base_route: webflow.admin
+
+webflow.settings:
+  route_name: webflow.settings_form
+  title: 'Settings'
+  base_route: webflow.admin
