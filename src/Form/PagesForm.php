@@ -30,38 +30,53 @@ class PagesForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if (!is_null($this->config('webflow.settings')->get('api-key'))) {
+      /** @var WebflowApi $webflow */
+      $webflow = \Drupal::service('webflow.webflow_api');
+      try {
+        $options = $webflow->getStaticPages();
+      } catch (ClientException $e) {
+        \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
+      }
+    }
+
     $form['redirect_header'] = [
       '#prefix' => '<div class="redirect-header"><p><strong>Create a new redirect</strong></p><p>Create redirects to serve a made-in-Webflow page in place of a Drupal page</p>',
       '#suffix' => '</div>'
     ];
 
-    $form['new_redirect_table'] = [
-      '#prefix' => '<table>',
-      '#suffix' => '</table>'
+    $header = [
+      'col1' => t('Drupal Path'),
+      'col2' => t('Webflow Page'),
     ];
 
-    $form['new_redirect_table']['table_row'] = [
-      '#prefix' => '<tr>',
-      '#suffix' => '</tr>'
+    $form['table'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#tree' => TRUE
     ];
 
-    $form['new_redirect_table']['table_row']['drupal_path'] = [
-      '#prefix' => '<td>',
-      '#suffix' => '</td>',
-      '#type' => 'textfield',
-      '#title' => $this->t('Drupal Path'),
-      '#default_value' => $this->config('webflow.settings')->get('drupal-path'),
-      '#required' => true,
+    // @TODO: get stored pages from config
+    $pages = [
+      '/contact' => '/webflow-contact',
+      '/some-other-page' => '/webflow-other'
     ];
+    $counter = 0;
+    foreach ($pages as $drupal_url => $webflow_url) {
+      $row['drupal_path'] = [
+        '#type' => 'textfield',
+        '#default_value' => $drupal_url,
+        '#required' => true,
+      ];
+      $row['webflow_page'] = [
+        '#type' =>  'select',
+        '#options' => $options
+      ];
+      $form['table'][$counter] = $row;
+      $counter++;
+    }
 
-    $form['new_redirect_table']['table_row']['webflow_page'] = [
-      '#prefix' => '<td>',
-      '#suffix' => '</td>',
-      '#type' => 'textfield',
-      '#title' => $this->t('Webflow Page'),
-      '#default_value' => $this->config('webflow.settings')->get('webflow-page'),
-      '#required' => true,
-    ];
+
 
     return parent::buildForm($form, $form_state);
   }

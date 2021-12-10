@@ -43,7 +43,6 @@ class SettingsForm extends ConfigFormBase {
         $response = $webflow->getSites();
       } catch (ClientException $e) {
         \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
-//        \Drupal::messenger()->addError($e->getMessage());
       }
 
       if (is_array($response)) {

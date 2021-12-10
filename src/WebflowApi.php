@@ -63,8 +63,55 @@ class WebflowApi {
     try {
       $response = $this->httpClient->request('GET', 'https://api.webflow.com/sites', $options);
     } catch (ClientException $e) {
-//      $request_error_msg = Psr7\Message::toString($e->getRequest());
-//      $response_error_msg = Psr7\Message::toString($e->getResponse());
+      throw $e;
+    }
+
+    return json_decode($response->getBody());
+
+  }
+
+  public function getSiteId() {
+    $site_id = \Drupal::state()->get('wf_site_id');
+    if (!empty($site_id)) {
+      return $site_id;
+    }
+    try {
+      $response = $this->getSites();
+    } catch (ClientException $e) {
+      // TODO: add better error handling.
+      \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
+    }
+    $id = $response[0]->_id;
+    \Drupal::state()->set('wf_site_id', $id);
+    return $id;
+
+  }
+
+  public function getSiteDomain($site = NULL) {
+    if ($site === NULL) {
+      $site = $this->getSites();
+    }
+
+    $short_name = $site[0]->shortName;
+
+    $this->domain = $short_name . ".webflow.io";
+
+    return $this->domain;
+
+  }
+
+  public function getStaticPages($site_domain = NULL) {
+    $options = [
+      'headers' => $this->buildHeaders(),
+    ];
+
+    if ($site_domain === NULL) {
+      $site_domain = $this->getSiteDomain();
+    }
+
+    try {
+      $response = $this->httpClient->request('GET', "https://" . $site_domain . "/static-manifest.json", $options);
+    } catch (ClientException $e) {
       throw $e;
     }
 
