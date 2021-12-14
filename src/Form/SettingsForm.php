@@ -33,10 +33,11 @@ class SettingsForm extends ConfigFormBase {
     $form['webflow_api'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Add Webflow API Key'),
-      '#default_value' => $this->config('webflow.settings')->get('api-key'),
+      '#default_value' => $this->config('webflow.settings')->get('api_key'),
       '#required' => true,
     ];
-    if (!is_null($this->config('webflow.settings')->get('api-key'))) {
+    if (!is_null($this->config('webflow.settings')->get('api_key'))) {
+      // @TODO: DI this service
       /** @var WebflowApi $webflow */
       $webflow = \Drupal::service('webflow.webflow_api');
       try {
@@ -71,7 +72,7 @@ class SettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var WebflowApi $webflow */
     $this->config('webflow.settings')
-      ->set('api-key', $form_state->getValue('webflow_api'))
+      ->set('api_key', $form_state->getValue('webflow_api'))
       ->save();
     parent::submitForm($form, $form_state);
   }
