@@ -40,7 +40,7 @@ class WebflowApi {
   protected $httpClient;
 
   private function getClientId() {
-    return $this->configFactory->get('webflow.settings')->get('api-key');
+    return $this->configFactory->get('webflow.settings')->get('api_key');
   }
 
   public function buildHeaders() {

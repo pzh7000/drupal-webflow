@@ -16,7 +16,7 @@ class PagesForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'webflow_settings';
+    return 'webflow_pages';
   }
 
   /**
@@ -30,24 +30,14 @@ class PagesForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    if (!is_null($this->config('webflow.settings')->get('api-key'))) {
-      /** @var WebflowApi $webflow */
-      $webflow = \Drupal::service('webflow.webflow_api');
-      try {
-        $options = $webflow->getStaticPages();
-      } catch (ClientException $e) {
-        \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
-      }
-    }
-
     $form['redirect_header'] = [
       '#prefix' => '<div class="redirect-header"><p><strong>Create a new redirect</strong></p><p>Create redirects to serve a made-in-Webflow page in place of a Drupal page</p>',
       '#suffix' => '</div>'
     ];
 
     $header = [
-      'col1' => t('Drupal Path'),
-      'col2' => t('Webflow Page'),
+      $this->t('Drupal Path'),
+      $this->t('Webflow Page'),
     ];
 
     $form['table'] = [
@@ -56,27 +46,24 @@ class PagesForm extends ConfigFormBase {
       '#tree' => TRUE
     ];
 
-    // @TODO: get stored pages from config
-    $pages = [
-      '/contact' => '/webflow-contact',
-      '/some-other-page' => '/webflow-other'
-    ];
+    $mappings = $this->config('webflow.settings')->get('path_mappings');
     $counter = 0;
-    foreach ($pages as $drupal_url => $webflow_url) {
+    // @TODO: Add logic if there are no mappings
+    foreach ($mappings as $mapping) {
       $row['drupal_path'] = [
         '#type' => 'textfield',
-        '#default_value' => $drupal_url,
+        '#default_value' => $mapping['drupal_path'] ?? '',
         '#required' => true,
       ];
       $row['webflow_page'] = [
         '#type' =>  'select',
-        '#options' => $options
+        '#options' => $this->buildStaticPageOptions(),
+        '#default_value' => $mapping['webflow_page'] ?? NULL,
       ];
+
       $form['table'][$counter] = $row;
       $counter++;
     }
-
-
 
     return parent::buildForm($form, $form_state);
   }
@@ -98,12 +85,38 @@ class PagesForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var WebflowApi $webflow */
+    $rows = $form_state->getValue('table');
     $this->config('webflow.settings')
-      ->set('drupal-path', $form_state->getValue('drupal_path'))
-      ->set('webflow-page', $form_state->getValue('webflow_page'))
+      ->set('path_mappings', $rows)
       ->save();
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Helper method to build options of Static Pages from Webflow.
+   *
+   * @return array
+   *   Associative array of options
+   */
+  private function buildStaticPageOptions() {
+    $options = [];
+    if (!is_null($this->config('webflow.settings')->get('api_key'))) {
+      // @TODO: DI this service
+      /** @var WebflowApi $webflow */
+      $webflow = \Drupal::service('webflow.webflow_api');
+      try {
+        $static_pages = $webflow->getStaticPages();
+      } catch (ClientException $e) {
+        \Drupal::messenger()->addError("The API key you used is invalid: failed to list sites");
+      }
+
+      foreach ($static_pages as $page) {
+        $options[$page] = $page === '/index.html' ? 'Home' : $page;
+      }
+    }
+
+    return $options;
+
   }
 
 }

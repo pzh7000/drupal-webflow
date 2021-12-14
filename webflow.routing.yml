@@ -6,14 +6,6 @@ webflow.admin:
   requirements:
     _permission: 'administer webflow configuration'
 
-webflow.settings_form:
-  path: '/admin/config/system/webflow/settings'
-  defaults:
-    _title: 'Webflow Settings'
-    _form: 'Drupal\webflow\Form\SettingsForm'
-  requirements:
-    _permission: 'administer webflow configuration'
-
 webflow.pages_form:
   path: '/admin/config/system/webflow/pages'
   defaults:
