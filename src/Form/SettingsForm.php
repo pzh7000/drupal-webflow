@@ -70,7 +70,6 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var WebflowApi $webflow */
     $this->config('webflow.settings')
       ->set('api_key', $form_state->getValue('webflow_api'))
       ->save();
