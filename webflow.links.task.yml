@@ -5,6 +5,6 @@ webflow.admin:
 
 webflow.pages:
   route_name: webflow.pages_form
-  title: 'Pages'
+  title: 'Page rules'
   base_route: webflow.admin
 
