@@ -1,6 +1,6 @@
 webflow.settings_form:
-  title: Webflow Settings
+  title: Webflow settings
   description: Configure Webflow integration.
-  parent: system.admin_config_system
+  parent: system.admin_config_services
   route_name: webflow.admin
   weight: 10

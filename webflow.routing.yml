@@ -1,5 +1,5 @@
 webflow.admin:
-  path: '/admin/config/system/webflow'
+  path: '/admin/config/services/webflow'
   defaults:
     _title: 'Webflow Admin'
     _form: 'Drupal\webflow\Form\SettingsForm'
@@ -7,9 +7,13 @@ webflow.admin:
     _permission: 'administer webflow configuration'
 
 webflow.pages_form:
-  path: '/admin/config/system/webflow/pages'
+  path: '/admin/config/services/webflow/pages'
   defaults:
-    _title: 'Webflow Pages'
+    _title: 'Webflow Page Rules'
     _form: 'Drupal\webflow\Form\PagesForm'
   requirements:
     _permission: 'administer webflow configuration'
+
+route_callbacks:
+  - '\Drupal\webflow\Routing\Routes::routes'
+

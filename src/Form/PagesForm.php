@@ -53,17 +53,14 @@ class PagesForm extends ConfigFormBase {
       '#suffix' => '</div>'
     ];
 
-    $count = $form_state->get('mapping_count');
-    if (is_null($count)) {
-      $mappings = $this->config('webflow.settings')->get('path_mappings');
-      $count = count($mappings);
-      $form_state->set('mapping_count', $count);
+
+    if ($form_state->getValues()) {
+      $this->processMappings($form, $form_state);
     }
 
-    for ($delta = 0; $delta <= $count; $delta++) {
-      if (!isset($form['table'][$delta])) {
-        $form['table'][$delta] = $this->buildRow($delta);
-      }
+    $mappings = $this->config('webflow.settings')->get('path_mappings');
+    foreach ($mappings as $delta => $mapping) {
+      $form['table'][$delta] = $this->buildRow($delta, $mapping);
     }
 
     $form['add_row'] = [
@@ -71,7 +68,7 @@ class PagesForm extends ConfigFormBase {
       '#value' => $this->t('Add another'),
       '#submit' => ['::addRowSubmit'],
       '#ajax' => [
-        'callback'=> '::addRowCallback',
+        'callback'=> '::ajaxCallback',
         'wrapper' => 'table-wrapper',
         'effect' => 'fade'
       ]
@@ -81,12 +78,34 @@ class PagesForm extends ConfigFormBase {
   }
 
   /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  public function processMappings(array $form, FormStateInterface $form_state) {
+    $mappings = $this->config('webflow.settings')->get('path_mappings');
+
+    // Remove mappings
+    foreach (array_keys(array_filter($form_state->getValue('remove_mappings', []))) as $delta) {
+      unset($mappings[$delta]);
+    }
+
+    $this->config('webflow.settings')
+      ->set('path_mappings', $mappings)
+      ->save();
+  }
+
+  /**
    * {@inheritdoc}
-   * @TODO: Update logic here.
+   * @TODO: validte routes do not collide with existing drupal routes
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // @TODO: Validate all rows have values for both drupal_path and webflow_page
-
+    // @TODO: Loop over each of the table rows and ensure that both the drupal_path and webflow_page have values before saving.
+    if ($form_state->getValue('drupal_path') === '') {
+      $form_state->setErrorByName('drupal_path', $this->t('Please supply a valid Drupal path'));
+    }
+    if ($form_state->getValue('webflow_page') === '') {
+      $form_state->setErrorByName('webflow_page', $this->t('Please supply a valid Webflow page'));
+    }
     parent::validateForm($form, $form_state);
   }
 
@@ -94,39 +113,41 @@ class PagesForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // @TODO: Check for empty values and don't set them to path_mappings.
+
     $rows = $form_state->getValue('table');
     $this->config('webflow.settings')
       ->set('path_mappings', $rows)
       ->save();
+    // @TODO: Rebuild routing as a new path has been created.
     parent::submitForm($form, $form_state);
   }
 
   /**
-   * Additional form submit handler
+   * Additional form submit handler for adding a blank new row.
+   *
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
   public function addRowSubmit(array &$form, FormStateInterface &$form_state) {
-    $count = $form_state->get('mapping_count') + 1;
-    $form_state->set('mapping_count', $count);
+    $mappings = $this->config('webflow.settings')->get('path_mappings');
+    $mappings[] = [
+      'drupal_path' => '',
+      'webflow_page' => ''
+    ];
+    $this->config('webflow.settings')->set('path_mappings', $mappings);
     $form_state->setRebuild(TRUE);
   }
 
   /**
+   * Ajax callback for form.
+   *
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
    * @return mixed
    */
-  public function addRowCallback(array &$form, FormStateInterface &$form_state) {
+  public function ajaxCallback(array &$form, FormStateInterface &$form_state) {
     return $form['table'];
-  }
-
-  public function removeRowCallback(array &$form, FormStateInterface &$form_state) {
-    $count = $form_state->get('mapping_count') - 1;
-    $form_state->set('mapping_count', $count);
-    $form_state->setRebuild(TRUE);
   }
 
   /**
@@ -155,12 +176,12 @@ class PagesForm extends ConfigFormBase {
     return $options;
   }
 
-  private function buildRow(int $delta) {
-    $mappings = $this->config('webflow.settings')->get('path_mappings');
-    $mapping = [];
-    if (isset($mappings[$delta])) {
-      $mapping = $mappings[$delta];
-    }
+  /**
+   * @param int $delta
+   *
+   * @return array
+   */
+  private function buildRow(int $delta, array $mapping) {
 
     $row['drupal_path'] = [
       '#title' => $this->t('Drupal Path'),
@@ -183,7 +204,7 @@ class PagesForm extends ConfigFormBase {
       '#title' => $this->t('Remove'),
       '#title_display' => 'invisible',
       '#ajax' => [
-        'callback' => '::removeRowCallback',
+        'callback' => '::ajaxCallback',
         'wrapper' => 'table-wrapper',
         'effect' => 'fade',
         'progress' => 'none',
@@ -195,5 +216,6 @@ class PagesForm extends ConfigFormBase {
 
     return $row;
   }
+
 
 }
